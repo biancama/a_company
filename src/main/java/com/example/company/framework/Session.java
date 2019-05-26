@@ -7,13 +7,13 @@ import java.util.Optional;
 
 public enum Session {
     INSTANCE;
-    private Map<Class, Object> map = new HashMap<>();
+    private Map<Class<? extends Object>, Object> map = new HashMap<>();
 
-    public void put(Class key, Object obj) {
+    public void put(Class<? extends Object> key, Object obj) {
         map.put(key, obj);
     }
 
-    public Optional<Object> get(Class key) {
+    public Optional<Object> get(Class<? extends Object> key) {
         return Optional.ofNullable(map.get(key));
     }
 }

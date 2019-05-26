@@ -10,8 +10,15 @@
   <properties>
     <maven.compiler.source>1.8</maven.compiler.source>
     <maven.compiler.target>1.8</maven.compiler.target>
+  <docker.plugin.version>0.30.0</docker.plugin.version>
+  <docker.image.prefix>com.example.company</docker.image.prefix>
   </properties>
   <dependencies>
+    <dependency>
+      <groupId>io.fabric8</groupId>
+      <artifactId>docker-maven-plugin</artifactId>
+      <version>${docker.plugin.version}</version>
+    </dependency>
     <dependency>
       <groupId>org.assertj</groupId>
       <artifactId>assertj-core</artifactId>
@@ -19,10 +26,79 @@
       <scope>test</scope>
     </dependency>
     <dependency>
+      <groupId>org.mockito</groupId>
+      <artifactId>mockito-all</artifactId>
+      <version>1.10.19</version>
+      <scope>test</scope>
+    </dependency>
+    <dependency>
       <groupId>junit</groupId>
       <artifactId>junit</artifactId>
-      <version>3.8.1</version>
+      <version>4.12</version>
       <scope>test</scope>
     </dependency>
   </dependencies>
+  <profiles>
+    <profile>
+      <id>local</id>
+      <activation>
+        <activeByDefault>true</activeByDefault>
+      </activation>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <configuration>
+              <archive>
+                <manifest>
+                  <addClasspath>true</addClasspath>
+                  <mainClass>com.example.company.App</mainClass>
+                </manifest>
+              </archive>
+            </configuration>
+          </plugin>
+          <plugin>
+            <groupId>io.fabric8</groupId>
+            <artifactId>docker-maven-plugin</artifactId>
+            <version>${docker.plugin.version}</version>
+            <configuration>
+              <images>
+                 <image>
+                  <name>${docker.image.prefix}/${project.artifactId}:${project.version}</name>
+                <build>
+                  <from>java:8</from>
+                  <assembly>
+                    <descriptor>assembly.xml</descriptor>
+                  </assembly>
+                  <entryPoint>
+                    <exec>
+                      <arg>java</arg>
+                      <arg>-Djava.security.egd=file:/dev/./urandom</arg>
+                      <arg>-jar</arg>
+                      <arg>/maven/${project.artifactId}-${project.version}.${project.packaging}</arg>
+                    </exec>
+                  </entryPoint>
+                  <assembly>
+                    <descriptorRef>artifact</descriptorRef>
+                  </assembly>
+                </build>
+                </image>
+              </images>
+            </configuration>
+
+          </plugin>
+
+          <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <configuration>
+              <source>1.8</source>
+              <target>1.8</target>
+            </configuration>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
 </project>

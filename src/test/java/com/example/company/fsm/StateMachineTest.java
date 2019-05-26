@@ -1,41 +1,30 @@
-package com.example.company.component;
+package com.example.company.fsm;
 
+import static org.assertj.core.api.Assertions.assertThat;
 
-import static java.lang.String.format;
-
-import com.example.company.component.listener.GameListener;
-import com.example.company.component.listener.InsertHeightListener;
 import com.example.company.component.listener.InsertWidthListener;
-import com.example.company.component.listener.ResumeListener;
-import com.example.company.component.listener.SaveListener;
-import com.example.company.framework.ioc.AutoWire;
-import com.example.company.fsm.Event;
-import com.example.company.fsm.State;
-import com.example.company.fsm.StateMachine;
-import com.example.company.fsm.Transition;
-import com.example.company.service.GameService;
-import com.example.company.service.PersistenceService;
+import org.junit.Before;
+import org.junit.Test;
+import org.junit.runner.RunWith;
+import org.mockito.runners.MockitoJUnitRunner;
 
-import java.util.Comparator;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class GameStateMachine {
-
+/**
+ * Tests for {@link StateMachine}.F
+ */
+@RunWith(MockitoJUnitRunner.class)
+public class StateMachineTest {
     private StateMachine stateMachine;
+    private Transition createTransition, exitTransition01;
+    private State create;
 
-    @AutoWire
-    private GameService gameService;
-
-    @AutoWire
-    private PersistenceService persistenceService;
-
-    public void setUpMachine() {
+    @Before
+    public void setUp() {
         State start = new State("start");
         State end = new State("exit");
-        State create = new State("create");
+        create = new State("create");
         State rowState = new State("row");
         State columnState = new State("column");
         State gameState = new State("game");
@@ -48,19 +37,13 @@ public class GameStateMachine {
             add(gameState);
         }};
 
-        Transition createTransition = Transition.builder()
+         createTransition = Transition.builder()
             .source(start).target(create).event(new Event('1'))
             .name("create")
             .build();
 
-        Transition resumeTransition = Transition.builder()
-            .source(start).target(gameState).event(new Event('2'))
-            .name("resume")
-            .actionListener(new ResumeListener(persistenceService))
-            .build();
-
-        Transition exitTransition01 = Transition.builder()
-            .source(start).target(end).event(new Event('3'))
+        exitTransition01 = Transition.builder()
+            .source(start).target(end).event(new Event('2'))
             .name("exit")
             .build();
 
@@ -79,7 +62,7 @@ public class GameStateMachine {
             .name("exit")
             .build();
         Transition exitTransition05 = Transition.builder()
-            .source(gameState).target(end).event(new Event('2'))
+            .source(gameState).target(end).event(new Event('1'))
             .name("exit")
             .build();
 
@@ -92,7 +75,6 @@ public class GameStateMachine {
         Transition columnTransition = Transition.builder()
             .source(rowState).target(columnState).event(new Event('1'))
             .name("insert Village height")
-            .actionListener(new InsertHeightListener(gameService))
             .build();
 
         Transition gameTransition = Transition.builder()
@@ -103,31 +85,21 @@ public class GameStateMachine {
         Transition upTransition = Transition.builder()
             .source(gameState).target(gameState).event(new Event('e'))
             .name("up")
-            .actionListener(new GameListener(gameService))
             .build();
 
         Transition leftTransition = Transition.builder()
             .source(gameState).target(gameState).event(new Event('s'))
             .name("left")
-            .actionListener(new GameListener(gameService))
             .build();
 
         Transition rightTransition = Transition.builder()
             .source(gameState).target(gameState).event(new Event('d'))
             .name("right")
-            .actionListener(new GameListener(gameService))
             .build();
 
         Transition downTransition = Transition.builder()
             .source(gameState).target(gameState).event(new Event('x'))
             .name("down")
-            .actionListener(new GameListener(gameService))
-            .build();
-
-        Transition saveTransition = Transition.builder()
-            .source(gameState).target(end).event(new Event('1'))
-            .name("save")
-            .actionListener(new SaveListener(persistenceService))
             .build();
 
 
@@ -147,22 +119,22 @@ public class GameStateMachine {
             .withTransition(leftTransition)
             .withTransition(rightTransition)
             .withTransition(exitTransition05)
-            .withTransition(saveTransition)
-            .withTransition(resumeTransition)
             .build();
     }
 
-    public List<String> getOptions() {
-        return stateMachine.getCurrentTransitions().stream().sorted(Comparator.comparing(o -> o.getEvent().getCharacter()))
-            .map(t -> format("%c. %s", t.getEvent().getCharacter().charValue(), t.getName()))
-            .collect(Collectors.toList());
+
+    @Test
+    public void givenAFSMWithACurrentStateThenAllPossibleTransitionsAreReturned() {
+
+        assertThat(stateMachine.getCurrentTransitions()).containsExactlyInAnyOrder(createTransition, exitTransition01);
+
     }
 
-    public boolean isFinal() {
-        return stateMachine.getCurrent().isFinal();
+    @Test
+    public void givenAFSMWithACurrentStateThenFireAnEventWillRetrunTheNextState() {
+
+        assertThat(stateMachine.fire(new Event('1'))).isEqualTo(create);
+
     }
 
-    public State event(Character c) {
-        return stateMachine.fire(new Event(c));
-    }
 }

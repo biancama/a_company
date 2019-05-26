@@ -1,6 +1,5 @@
 package com.example.company.fsm;
 
-
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -33,7 +32,7 @@ public class StateMachine {
         return current;
     }
 
-    public final synchronized State fire(final Event event) {
+    public synchronized State fire(final Event event) {
         Transition transition = getCurrentTransitions().stream()
             .filter(t -> t.getEvent().equals(event))
             .findAny().orElseThrow(() -> new RuntimeException("Fired an event not possible for the current state"));

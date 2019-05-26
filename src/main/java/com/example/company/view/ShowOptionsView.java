@@ -17,5 +17,8 @@ public class ShowOptionsView implements Observer {
     public void update(Observable o, Object arg) {
         GameState gameState = (GameState) o;
         gameState.getPrompt().forEach(System.out::println);
+
+        gameState.getVillage()
+            .ifPresent(v -> System.out.println(v));
     }
 }

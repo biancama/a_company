@@ -38,10 +38,10 @@ As PO I want to be able to create a game for starting playing
 ### Acceptance criteria
 The system will ask some questions to the users:
 * number of rows and columns of the village (r >=2 and c>=2)
-* number of enemies (n) 
+* number of enemies (n) default 3
 
-As result, the system will create on memory a village (r x c), (n) enemies each of them with 3 weapons chosen randomly. It will place randomly the enemies in the village (except top left cell).
-A character is created with 3 weapons chosen randomly. The character is placed at the top left cell
+As result, the system will create on memory a village (r x c), (n) enemies each of them with1 weapons chosen randomly. It will place randomly the enemies in the village (except top left cell).
+A character is created with 1 weapon chosen randomly. The character is placed at the top left cell
  
  
 ### Move a character around the village (Explore and gain experience )
@@ -75,13 +75,55 @@ As PO I want to be able to resume my game so I can keep playing between days
 The system will check all files in the folder ```games``` . The system will re-start the games at the status saved.
 
 ## Technical solution
-The engine of the game is a finite state machine with all possible commands of the game. Each transiton of the finite state machine will be dispatched to a controller.
+The engine of the game is a finite state machine with all possible commands of the game. Each transition of the finite state machine will be dispatched to a consumer.
 The model is stored in memory and it will be a singleton. The view part is a utility class and according with the model will display a simple user interface
 
 
+## The build 
+Compiling and test
+```mvn clean package -DskipTests```
+
+tests
+```mvn verify```
+
+
+running 
+```java -jar target/game-1.0-SNAPSHOT.jar```
+
+You can save the game only after the start game
+
+You can resume a game only from a file saved before
+
+
+I added also docker support
+Create docker container
+
+```mvn docker:build```
+
+to run the container
+
+```docker run -v -d --name a_company com.example.company/game:1.0-SNAPSHOT```
+
+Interact with the conatiner
+
+```docker run  -a stdin -a stdout -i -t --name a_company com.example.company/game:1.0-SNAPSHOT```
 
 ## Note
+Design pattern used:
+Observable, singleton, create factory. 
+
+Simple Ioc using service autowire annotation
+
+
 This code is only for assignment purpose. I used design pattern because requested (maybe sometime is overkill). 
 I used java 8, because it wasn't specified. I did not use unmodifiable collection because part of java 10.
 I neglected for time reason: proper validation, proper dispatcher
 
+I neglected ioc for multiple service of the same type. Despite ioc accept more than one bean implementing the same interface, I didn't implement qualifier.
+
+I used Observer and newInstance feature because it will be deprecated in java 9.
+
+Inversion of control of the framework is very primitive. I did it only for the sake of exercise. I'm wiring GameStateMachine but a proper wire would be using another annotation for example @Bean
+I wanted to decouple listener to standard output... allowing to use view different than simple standard output
+
+I neglected integration tests

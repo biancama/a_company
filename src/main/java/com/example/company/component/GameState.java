@@ -1,7 +1,11 @@
 package com.example.company.component;
 
+import com.example.company.model.Entity;
+import com.example.company.model.Village;
+
 import java.util.List;
 import java.util.Observable;
+import java.util.Optional;
 
 
 public class GameState extends Observable {
@@ -10,7 +14,7 @@ public class GameState extends Observable {
 
     private int columns;
 
-    private List<List<Character>> village;
+    private Village village;
 
     private List<String> prompt;
 
@@ -31,12 +35,14 @@ public class GameState extends Observable {
         this.columns = columns;
     }
 
-    public List<List<Character>> getVillage() {
-        return village;
+    public Optional<Village> getVillage() {
+        return Optional.ofNullable(village);
     }
 
-    public void setVillage(List<List<Character>> village) {
+    public void setVillage(Village village) {
         this.village = village;
+        setChanged();
+        notifyObservers();
     }
 
     public List<String> getPrompt() {
@@ -49,15 +55,27 @@ public class GameState extends Observable {
         notifyObservers();
     }
 
-    public String villageToString()  {
-        StringBuilder stringBuilder = new StringBuilder();
-        for (List<Character> characters : village) {
-            for (Character character : characters) {
-                stringBuilder.append(character);
-                stringBuilder.append(System.getProperty("line.separator"));
-            }
+    public void moveHero(Movement movement) {
+        Village village = this.getVillage().orElseThrow(() -> new RuntimeException("Village not set"));
+        Entity hero = village.getCharacter();
+        switch (movement) {
+            case UP:
+                hero.moveUp();
+                break;
+            case DOWN:
+                hero.moveDown();
+                break;
+            case RIGHT:
+               hero.moveRight();
+               break;
+            case LEFT:
+                hero.moveLeft();
+                break;
+            default:
+                throw new IllegalStateException("Unsupported movement: " + movement);
         }
-        return stringBuilder.toString();
+        setChanged();
+        notifyObservers();
     }
 
 }
